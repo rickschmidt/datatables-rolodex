@@ -7,10 +7,19 @@
         font-weight: bold;
         background-color: rgb(203, 225, 254);   
     }
+
+    .rolodex_link{
+        font-size: 9pt;
+        font-weight: bold;
+    }
+    .rolodex_link:hover{
+        background-color: red;
+    }
 </style>
-<script>
+<script>    
+var table;
     $(document).ready(function() {
-        var table = $('#example').dataTable( {
+        table = $('#example').dataTable( {
             "columnDefs": [
                 {
                     // The `data` parameter refers to the data for the cell (defined by the
@@ -25,18 +34,35 @@
                 { "visible": false,  "targets": [ 3 ] }
             ],
             "aaSorting":[[2,'desc']],
-            "sDom":"pRptRR"
+            "sDom":"pRpltRR"
         } );
-        table.addRolodex('T');
+        // table.filterRolodex('T');
+
+        $('th').each(function(){
+            $(this).bind('click', function(){
+                console.log(table.fnSettings());
+                table.showRolodex();
+            })
+        })
 } );
 
 (function($, window, document) {
+    $.fn.dataTableExt.oApi.fnResetAllFilters = function (oSettings, bDraw) {
+        
+                    for(iCol = 0; iCol < oSettings.aoPreSearchCols.length; iCol++) {
+                        oSettings.aoPreSearchCols[ iCol ].sSearch = '';
+                    }
+                    $('.filter-term').remove();
+                    oSettings.oPreviousSearch.sSearch = '';
+                    if(typeof bDraw === 'undefined') bDraw = true;
+                    console.log(oSettings.oApi);
+                    if(bDraw) this.fnDraw();  
+                    }  
+    $.fn.dataTableExt.oApi.filterRolodex = function (oSettings, filter){
+            
+            this.fnResetAllFilters(oSettings,false);
 
-    $.fn.dataTableExt.oApi.addRolodex = function (oSettings, filter){
-        // console.log($.fn.dataTableExt);
-       // dTable.fnRolodexResetAllFilters();
-
-            filter = filter.trim(); 
+            filter = filter.trim();         
             if(filter == 'All'){
                 this.fnFilter('',this.fnSettings().aaSorting[0][0]);       
             }else if(filter == 'Other'){  
@@ -47,8 +73,15 @@
     }
 
     $.fn.dataTableExt.oApi.hideRolodex = function (oSettings){
-      
-      
+        this.fnResetAllFilters( oSettings,true);
+        $('.rolodex').css('visibility','hidden');      
+    }
+
+    $.fn.dataTableExt.oApi.showRolodex = function (oSettings){
+        console.log('showrolod');
+        console.log(oSettings);
+        this.fnResetAllFilters( oSettings,true);
+        $('.rolodex').css('visibility','visible');
     }
 
 
@@ -72,21 +105,13 @@
             // oSettings.nTable.setAttribute( 'aria-describedby', oSettings.sTableId+'_rolodex' );
             
         d=document.createElement('div');
-        $(d).addClass('rolodex')    
-            .appendTo($("#myDiv")) //main div
-            .click(function(){
-                $(this).remove();
-            })
-            .hide()
-            .slideToggle(300)
-            .delay(2500)
-            .slideToggle(300)
-            .queue(function() {
-                $(this).remove();
-            });
+        $(d).addClass('rolodex');
+            
+            
             $(d).append('<a href="#"> A </a> |<a href="#"> B </a> |<a href="#"> C </a> |<a href="#"> D </a> |<a href="#"> E </a> |<a href="#"> F </a> |<a href="#"> G </a> |<a href="#"> H </a> |<a href="#"> I </a> |<a href="#"> J </a> |<a href="#"> K </a> |<a href="#"> L </a> |<a href="#"> M </a> |<a href="#"> N </a> |<a href="#"> O </a> |<a href="#"> P </a> |<a href="#"> Q </a> |<a href="#"> R </a> |<a href="#"> S </a> |<a href="#"> T </a> |<a href="#"> U </a> |<a href="#"> V </a> |<a href="#"> W </a> |<a href="#"> X </a> |<a href="#"> Y </a> |<a href="#"> Z </a> |<a href="#"> Other </a> |<a id="all" class="active" href="#"> All </a>');
                         
             $(d).find('a').each(function(){
+                $(this).addClass('rolodex_link');
                 $(this).bind('click', function(){                    
                     $('.rolodex').find('a').removeClass('active');                                            
                     selected = $(this).text().trim();            
@@ -94,7 +119,7 @@
                         return $(this).text().trim() === selected;
                     }).addClass("active"); 
                               
-                    oSettings.oInstance.addRolodex(selected);
+                    oSettings.oInstance.filterRolodex(selected);
                 }); 
             });
             // this.s.dt = oSettings.oInstance.fnSettings();
@@ -102,11 +127,11 @@
 return d;
 }
 
-Rolodex.prototype = {
-    "filter": function (L){
-        oSettings.oApi.addRolodex(L);
-    }
- }
+// Rolodex.prototype = {
+//     "filter": function (L){
+//         oSettings.oApi.filterRolodex(L);
+//     }
+//  }
 
     $.fn.dataTableExt.aoFeatures.push( {
         "fnInit": function( oSettings ) {
@@ -602,4 +627,7 @@ Rolodex.prototype = {
             </tr>
         </tbody>
     </table>
+
+    <input type="Button" value="Show" onclick = "table.showRolodex();">Show</input>
+    <input type="Button" value="Hide" onclick = "table.hideRolodex();">Hide</input>
     </div>
